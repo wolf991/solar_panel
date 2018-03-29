@@ -11,6 +11,8 @@
 #define READ_1 ((unsigned char) 1)
 #define READ_2 ((unsigned char) 2)
 #define READ_3 ((unsigned char) 3)
+#define MOVE_RIGHT ((unsigned char) 4)
+#define MOVE_LEFT ((unsigned char) 5)
 #define OK ((unsigned char 0))
 
 void init_uart () {
@@ -30,6 +32,15 @@ void init_adc () {
     ADMUX = (1 << REFS0) | (1 << ADLAR);
 }
 
+void init_gpio () {
+    // define output ports
+    DDRD = (1 << PIND4) | (1 << PIND7);
+    DDRB = (1 << PINB2) | (1 << PINB3) | (1 << PINB6) | (1 << PINB7);
+    // make them high since the 'ouput' is active when low
+    PORTD = 0xFF;
+    PORTB = 0xFF;
+}
+
 void uart_send (unsigned char data) {
     while (!(UCSRA & (1 << UDRE)));
     UDR = data;
@@ -46,9 +57,30 @@ unsigned char read_voltage(unsigned char pin) {
     return ADCH;
 }
 
+void move_right () {
+    // we have to have PIND7 and PINB2 allways low, since they are 'ground'
+    PORTB = ~(1 << PINB3) & ~(1 << PINB2); // orange and white
+    PORTD = 0xFF;
+    _delay_ms(2000);
+    PORTB = ~(1 << PINB6); // red
+    PORTD = ~(1 << PIND7); // black
+    _delay_ms(2000);
+    PORTB = ~(1 << PINB7) & ~(1 << PINB2); // blue and white
+    PORTD = 0xFF;
+    _delay_ms(2000);
+    PORTD = ~(1 << PIND4) & ~(1 << PIND7); // yellow and black
+    PORTB = 0xFF;
+    _delay_ms(2000);
+
+    // reset all the ports
+    PORTD = 0xFF;
+    PORTB = 0xFF;
+}
+
 int main () {
     init_uart();
     init_adc();
+    init_gpio();
     sei();
     while (1) {};
 }
@@ -64,6 +96,9 @@ ISR(USART_RXC_vect) {
         case READ_3:
             res = read_voltage(command);
             uart_send(res);
+            break;
+        case MOVE_RIGHT:
+            move_right();
             break;
     }
 }

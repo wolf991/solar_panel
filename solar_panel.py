@@ -6,6 +6,8 @@ PIN_0 = chr(0)
 PIN_1 = chr(1)
 PIN_2 = chr(2)
 PIN_3 = chr(3)
+MOVE_RIGHT = chr(4)
+MOVE_LEFT = chr(5)
 OK = chr(0)
 VREF = 5.0 # reference voltage for ADC
 
@@ -36,7 +38,8 @@ def get_voltage(pin):
     return calc_voltage(recieve_reading())
 
 if __name__ == '__main__':
-    print get_voltage(PIN_0)
-    print get_voltage(PIN_1)
-    print get_voltage(PIN_2)
-    print get_voltage(PIN_3)
+    # print get_voltage(PIN_0)
+    # print get_voltage(PIN_1)
+    # print get_voltage(PIN_2)
+    # print get_voltage(PIN_3)
+    send_cmd(MOVE_RIGHT)
