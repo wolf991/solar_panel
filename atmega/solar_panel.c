@@ -13,7 +13,7 @@
 #define READ_3 ((unsigned char) 3)
 #define MOVE_RIGHT ((unsigned char) 4)
 #define MOVE_LEFT ((unsigned char) 5)
-#define OK ((unsigned char 0))
+#define OK ((unsigned char) 0)
 
 void init_uart () {
     // set baudrate
@@ -34,8 +34,15 @@ void init_adc () {
 
 void init_gpio () {
     // define output ports
-    DDRD = (1 << PIND4) | (1 << PIND7);
-    DDRB = (1 << PINB2) | (1 << PINB3) | (1 << PINB6) | (1 << PINB7);
+    // Wire colors:
+    // -PIND3: RED
+    // -PIND4: BLUE
+    // -PIND6: BLACK
+    // -PINB2: WHITE 
+    // -PINB3: ORANGE
+    // -PINB7: YELLOW
+    DDRD = (1 << PIND3) | (1 << PIND4) | (1 << PIND6);
+    DDRB = (1 << PINB2) | (1 << PINB3) | (1 << PINB7);
     // make them high since the 'ouput' is active when low
     PORTD = 0xFF;
     PORTB = 0xFF;
@@ -58,23 +65,24 @@ unsigned char read_voltage(unsigned char pin) {
 }
 
 void move_right () {
-    // we have to have PIND7 and PINB2 allways low, since they are 'ground'
+    // we have to have PIND6 and PINB2 allways low, since they are 'ground'
     PORTB = ~(1 << PINB3) & ~(1 << PINB2); // orange and white
     PORTD = 0xFF;
-    _delay_ms(2000);
-    PORTB = ~(1 << PINB6); // red
-    PORTD = ~(1 << PIND7); // black
-    _delay_ms(2000);
-    PORTB = ~(1 << PINB7) & ~(1 << PINB2); // blue and white
-    PORTD = 0xFF;
-    _delay_ms(2000);
-    PORTD = ~(1 << PIND4) & ~(1 << PIND7); // yellow and black
+    _delay_ms(9000);
+    PORTD = ~(1 << PIND3) & ~(1 << PIND6); // red and black
     PORTB = 0xFF;
-    _delay_ms(2000);
+    _delay_ms(9000);
+    PORTD = ~(1 << PIND4); // blue
+    PORTB = ~(1 << PINB2); // white
+    _delay_ms(9000);
+    PORTD = ~(1 << PIND6); // black
+    PORTB = ~(1 << PINB7); // yellow
+    _delay_ms(9000);
 
     // reset all the ports
     PORTD = 0xFF;
     PORTB = 0xFF;
+    uart_send(OK);
 }
 
 int main () {

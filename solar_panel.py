@@ -16,13 +16,13 @@ SERIAL_DEVICE = serial.Serial(port='/dev/ttyS0',
                               parity=serial.PARITY_NONE,
                               stopbits=serial.STOPBITS_ONE,
                               bytesize=serial.EIGHTBITS,
-                              timeout=2)
+                              timeout=5)
 
 def send_cmd(command):
     SERIAL_DEVICE.write(command)
 
 def recieve_ack():
-    return ord(SERIAL_DEVICE.read()) == OK
+    return SERIAL_DEVICE.read() == OK
 
 def send_reading_cmd(pin):
     SERIAL_DEVICE.write(pin)
@@ -42,4 +42,8 @@ if __name__ == '__main__':
     # print get_voltage(PIN_1)
     # print get_voltage(PIN_2)
     # print get_voltage(PIN_3)
-    send_cmd(MOVE_RIGHT)
+    while True:
+        send_cmd(MOVE_RIGHT)
+        if not recieve_ack():
+            break
+        time.sleep(1)
