@@ -13,6 +13,8 @@
 #define READ_3 ((unsigned char) 3)
 #define MOVE_RIGHT ((unsigned char) 4)
 #define MOVE_LEFT ((unsigned char) 5)
+#define MOVE_RIGHT_FULL ((unsigned char) 6)
+#define MOVE_LEFT_FULL ((unsigned char) 7)
 #define OK ((unsigned char) 0)
 
 void init_uart () {
@@ -35,17 +37,23 @@ void init_adc () {
 void init_gpio () {
     // define output ports
     // Wire colors:
-    // -PIND3: RED
-    // -PIND4: BLUE
-    // -PIND6: BLACK
-    // -PINB2: WHITE 
-    // -PINB3: ORANGE
-    // -PINB7: YELLOW
-    DDRD = (1 << PIND3) | (1 << PIND4) | (1 << PIND6);
-    DDRB = (1 << PINB2) | (1 << PINB3) | (1 << PINB7);
+    // -PINB6: WHITE
+    // -PINB7: BLACK
+    // -PIND5: ORANGE
+    // -PIND6: BLUE
+    // -PIND7: RED
+    // -PINB0: YELLOW
+    DDRD = (1 << PIND5) | (1 << PIND6) | (1 << PIND7);
+    DDRB = (1 << PINB0) | (1 << PINB6) | (1 << PINB7);
     // make them high since the 'ouput' is active when low
     PORTD = 0xFF;
     PORTB = 0xFF;
+    // PORTD &= ~(1 << PIND5);
+    // PORTD &= ~(1 << PIND6);
+    // PORTD &= ~(1 << PIND7);
+    // PORTB &= ~(1 << PINB0);
+    // PORTB &= ~(1 << PINB6);
+    // PORTB &= ~(1 << PINB7);
 }
 
 void uart_send (unsigned char data) {
@@ -65,24 +73,118 @@ unsigned char read_voltage(unsigned char pin) {
 }
 
 void move_right () {
-    // we have to have PIND6 and PINB2 allways low, since they are 'ground'
-    PORTB = ~(1 << PINB3) & ~(1 << PINB2); // orange and white
+    // move order: orange -> red -> blue -> yellow
+    // STEP 1:
+    PORTD = ~(1 << PIND5); // orrange
+    PORTB = ~(1 << PINB6); // white
+    _delay_ms(200);
     PORTD = 0xFF;
-    _delay_ms(9000);
-    PORTD = ~(1 << PIND3) & ~(1 << PIND6); // red and black
     PORTB = 0xFF;
-    _delay_ms(9000);
-    PORTD = ~(1 << PIND4); // blue
-    PORTB = ~(1 << PINB2); // white
-    _delay_ms(9000);
-    PORTD = ~(1 << PIND6); // black
-    PORTB = ~(1 << PINB7); // yellow
-    _delay_ms(9000);
+    _delay_ms(200);
+    // STEP 2:
+    PORTD = ~(1 << PIND7); // red
+    PORTB = ~(1 << PINB7); // black
+    _delay_ms(200);
+    PORTD = 0xFF;
+    PORTB = 0xFF;
+    _delay_ms(200);
+    // STEP 3:
+    PORTD = ~(1 << PIND6); // blue
+    PORTB = ~(1 << PINB6); // white
+    _delay_ms(200);
+    PORTD = 0xFF;
+    PORTB = 0xFF;
+    _delay_ms(200);
+    // STEP 4:
+    PORTD = 0xFF; // we don't use it
+    PORTB = ~(1 << PINB0) & ~(1 << PINB7); // yeelow and black
+    _delay_ms(200);
+    PORTD = 0xFF;
+    PORTB = 0xFF;
+    _delay_ms(200);
 
     // reset all the ports
     PORTD = 0xFF;
     PORTB = 0xFF;
     uart_send(OK);
+}
+void move_left () {
+    // move order: blue -> red -> orange -> yellow
+    // STEP 1:
+    PORTD = ~(1 << PIND6); // blue
+    PORTB = ~(1 << PINB6); // white
+    _delay_ms(200);
+    PORTD = 0xFF;
+    PORTB = 0xFF;
+    _delay_ms(200);
+    // STEP 2:
+    PORTD = ~(1 << PIND7); // red
+    PORTB = ~(1 << PINB7); // black
+    _delay_ms(200);
+    PORTD = 0xFF;
+    PORTB = 0xFF;
+    _delay_ms(200);
+    // STEP 3:
+    PORTD = ~(1 << PIND5); // orange
+    PORTB = ~(1 << PINB6); // white
+    _delay_ms(200);
+    PORTD = 0xFF;
+    PORTB = 0xFF;
+    _delay_ms(200);
+    // STEP 4:
+    PORTD = 0xFF; // we don't use it
+    PORTB = ~(1 << PINB0) & ~(1 << PINB7); // yeelow and black
+    _delay_ms(200);
+    PORTD = 0xFF;
+    PORTB = 0xFF;
+    _delay_ms(200);
+
+    // reset all the ports
+    PORTD = 0xFF;
+    PORTB = 0xFF;
+    uart_send(OK);
+}
+
+void move_right_full () {
+    // move order: orange&red -> red&blue -> blue&yellow -> yellow&orange
+    // STEP1:
+    PORTD = ~(1 << PIND5) & ~(1 << PIND7); // orange and red
+    _delay_ms(200);
+
+    // STEP 2:
+    PORTD = ~(1 << PIND6) & ~(1 << PIND7); // blue and red
+    _delay_ms(200);
+
+    // STEP 3:
+    PORTB = ~(1 << PINB0); // yellow
+    PORTD = ~(1 << PIND6); // blue
+    _delay_ms(200);
+
+    // STEP 4:
+    PORTB = ~(1 << PINB0); // yellow
+    PORTD = ~(1 << PIND5); // orange
+    _delay_ms(200);
+}
+
+void move_left_full () {
+    // move order: yellow&blue -> blue&red -> red&orange -> orange&yellow
+    // STEP1:
+    PORTB = ~(1 << PINB0); // yellow
+    PORTD = ~(1 << PIND6); // blue
+    _delay_ms(200);
+
+    // STEP 2:
+    PORTD = ~(1 << PIND6) & ~(1 << PIND7); // blue and red
+    _delay_ms(200);
+
+    // STEP 3:
+    PORTD = ~(1 << PIND5) & ~(1 << PIND7); // orange and red
+    _delay_ms(200);
+
+    // STEP 4:
+    PORTB = ~(1 << PINB0); // yellow
+    PORTD = ~(1 << PIND5); // orange
+    _delay_ms(200);
 }
 
 int main () {
@@ -107,6 +209,15 @@ ISR(USART_RXC_vect) {
             break;
         case MOVE_RIGHT:
             move_right();
+            break;
+        case MOVE_LEFT:
+            move_left();
+            break;
+        case MOVE_RIGHT_FULL:
+            move_right_full();
+            break;
+        case MOVE_LEFT_FULL:
+            move_left_full();
             break;
     }
 }
